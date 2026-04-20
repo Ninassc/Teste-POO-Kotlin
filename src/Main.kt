@@ -1,8 +1,39 @@
 import java.util.Dictionary
 
-data class Livro(val titulo: String, val autor: String, val isbn: String, var disponivel: Boolean)
+data class Livro(val titulo: String, val autor: String, val isbn: String, var disponivel: Boolean){
+    override fun toString(): String {
+        val status = if (disponivel) "disponível" else "indisponível"
+        return "\"$titulo\" de $autor (ISBN: $isbn) [$status]"
+    }
+}
 
-data class Usuario(val nome: String, val id: Int, val livrosEmprestados: MutableList<Livro>)
+data class Usuario(val nome: String, val id: Int, val livrosEmprestados: MutableList<Livro>){
+    override fun toString(): String {
+        return "$nome (id: $id)"
+    }
+
+    var livrosPegos : MutableList<Livro> = mutableListOf()
+
+    fun pegarLivro(livros : MutableList<Livro>){
+        println("Título do livro: ")
+        val titulo = leituraSegura()
+
+        for(livro in livros){
+            if(livro.titulo == titulo && livro.disponivel){
+                livrosPegos.add(livro)
+                livro.disponivel = false
+            }
+            if(livro.disponivel == false){
+                println("Não é possível pegar o livro: $titulo --> status = Indisponível")
+            }
+        }
+
+        println("Livros pegos: ")
+        for (livro in livrosPegos){
+            println(livro.titulo)
+        }
+    }
+}
 
 data class Biblioteca(val acervo: MutableList<Livro>, val usuarios: MutableList<Usuario>)
 
@@ -11,6 +42,12 @@ interface Emprestavel {
 
     fun devolver(): Boolean
 }
+
+//fun mostrarUsuarios(usuarios : MutableList<Usuario>){
+//
+//}
+
+
 
 fun mostrarHistoricoEmprestimos(historicoEmprestimos : MutableList<MutableMap<String, Any>>){
     for (emprestimo in historicoEmprestimos){
@@ -34,9 +71,10 @@ fun cadastrarLivro(): Livro {
     } while (isbn.length != 13)
 
     var estaDisponivel: Boolean
+    var disponivel : Int
     do {
         println("Disponibilidade: (1 para DISPONÍVEL/ 2 para INDISPONÍVEL) --> ")
-        val disponivel = leituraSegura().toInt()
+        disponivel = leituraSegura().toInt()
 
         if (disponivel == 1) {
             estaDisponivel = true
@@ -107,14 +145,14 @@ fun main() {
     while (true) {
         println("")
         println("Escolha a ação: ")
-        println("0 para SAIR\n1 para ADICIONAR USUÁRIO\n2 para CADASTRAR LIVROS\n3 para DEVOLVER LIVROS\n4 para LISTAR LIVROS DISPONÍVEIS\n5 para BUSCAR por TÍTULO ou AUTOR\n6 para MOSTRAR HISTÓRICO\n--> ")
+        println("0 para SAIR\n1 para ADICIONAR USUÁRIO\n2 para CADASTRAR LIVROS\n3 para DEVOLVER LIVROS\n4 para LISTAR LIVROS DISPONÍVEIS\n5 para BUSCAR por TÍTULO ou AUTOR\n6 para MOSTRAR HISTÓRICO\n7 para PEGAR LIVRO\n--> ")
 
         var acao = readLine()!!.toInt()
 
         if (acao == 0) {
             break
         } else if (acao == 1) {
-            var usuario = lerUsuario(usuarios)
+            val usuario = lerUsuario(usuarios)
             usuarios.add(usuario)
             for (livro in usuario.livrosEmprestados) {
                 livros.add(livro)
@@ -125,7 +163,7 @@ fun main() {
                 listaLivros.add(livro)
             }
 
-            var dicionario = mutableMapOf(
+            var dicionario : MutableMap<String, Any> = mutableMapOf(
                 "Usuário" to usuario,
                 "Livros" to listaLivros
             )
@@ -139,6 +177,7 @@ fun main() {
             livros.add(livro)
         }
         else if (acao == 4) {
+            println("")
             println("Livros disponíveis: ")
             for (livro in livros){
                 if (livro.disponivel){
@@ -147,6 +186,7 @@ fun main() {
             }
         }
         else if(acao == 5){
+            println("")
             println("Digite o NOME do autor ou TÍTULO do livro: ")
             val pesquisa = leituraSegura()
 
@@ -167,8 +207,19 @@ fun main() {
         else if (acao == 6){
             mostrarHistoricoEmprestimos(historicoEmprestimos)
         }
+        else if (acao == 7){
+            println("SEU NOME: ")
+            val nome = leituraSegura()
+
+            for (usuario in usuarios){
+                if (usuario.nome == nome){
+                    usuario.pegarLivro(livros)
+                }
+            }
+        }
 
         var biblioteca = Biblioteca(livros, usuarios)
+        println("")
         println("Acervo da biblioteca: ")
         for (livro in biblioteca.acervo) {
             println(livro.titulo)
